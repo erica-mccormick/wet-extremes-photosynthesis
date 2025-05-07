@@ -1,8 +1,8 @@
 
-# Code and data for "Susceptibility to photosynthesis suppression from extreme storms is highly site-dependent
+# Code and data for "Susceptibility to photosynthesis suppression from extreme storms is highly site-dependent"
 
 
-Accepted in <i>Global Change Biology</i>. May, 2025.
+<i>Global Change Biology</i>, 2025.
 
 
 ## Authors: 
