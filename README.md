@@ -1,9 +1,9 @@
 
-# Code for "Extreme soil wetness from storms commonly leads to photosynthesis reductions"
+# Code and data for "Susceptibility to photosynthesis suppression from extreme storms is highly site-dependent
 
-Submitted to <i>Nature Ecology and Evolution</i> August, 2024.
 
-Data will be uploaded to Figshare upon acceptance.
+Accepted in <i>Global Change Biology</i>. May, 2025.
+
 
 ## Authors: 
 
@@ -19,25 +19,34 @@ Artificial Intelligence (HAI), Stanford University
 <sup>4</sup>Department of Global Ecology, Carnegie 
 Institution for Science
 
-## Steps to reproducing analysis:
+## Steps for reproducing analysis:
 
-All figures and statistics are in analyses.ipynb. The order of analysis prior to that is:
+All figures and statistics are in e_main_figure_analyses.py. 
 
-1.  a_dd_processing.py --> Clean and prepare Fluxnet data
+To run the entire analysis from the beginning:
+1) Download the FLUXNET2015 ([FLUXNET2015](https://fluxnet.org/data/fluxnet2015-dataset/)) dataset (Pastorello et al., 2020). 
+2) Specify the correct paths to this dataset in utils/paths.py.
+3) Create a conda environment using environment.txt.
+4) Follow all steps in ``all_analysis.sh``. Note that each analysis step is completed twice: once using GPP from the daytime partitioning method and once using the GPP from the nighttime partitioning method.
 
-2. b_findevents.py --> Identify extreme wet event days
+All data produced is provided in the folders ``output_anomalies``, ``output_findevents``, and ``runs``.
 
-3. c_randomforest.py --> Train random forest model for each site (with hyperparameter tuning) and apply model to extreme wet event days. 
+## Summary of files:
 
-4. d_calc_anomalies_add_columns.py --> Calculate GPP anomalies and additional attributes (such as cumulative storm metrics)
+1.  ``a_dd_processing.py`` --> Clean and prepare FLUXNET data
 
-6. e_metadata.py --> Combine Fluxnet metadata with ancillary datasets (many extracted using GEE in this script)
+2. ``b_findevents.py`` --> Identify extreme wet event days
 
-5. f_random_forest_anomaly.py --> Train random forest models on the GPP anomalies to assess feature importance (Figure 3). There is one version for the daytime partitioned GPP (DT) and one for nighttime.
+3. ``c_randomforest.py`` --> Train random forest model for each site (with hyperparameter tuning) and apply model to extreme wet event days. 
+
+4. ``d_calc_anomalies_add_columns.py`` --> Calculate GPP anomalies and additional attributes (such as cumulative storm metrics)
+
+5. ``e_metadata`` --> Colate all site metadata, such as topography, mean annual precipitation, etc.
+
+6. ``f_main_figure_analyses.py`` --> Generates all figures and statistics found in paper.
+
+5. ``g_random_forest_anomaly.py`` --> Train random forest models on the GPP anomalies to assess feature importance. After this, run e_main_figure_analyses.py again to generate relevant figures. 
 
 
-7. analyses.ipynb --> This is where remaining analysis and all statistics and figures (SI and main text) are printed.
-
-There is also a folder called <i>utils</i> which contains folder paths and small scripts used multiple times.
 
 
