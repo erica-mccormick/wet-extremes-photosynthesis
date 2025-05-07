@@ -8,20 +8,25 @@ from sklearn.model_selection import cross_val_score, KFold, GridSearchCV, Random
 rng = np.random.default_rng()
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, KFold, cross_val_score
-
+import argparse
 import sys
 
 
 def main():
 
-    features = ['SW_IN_F', 'TA_F', 'RH', 'WS_F', 'LAI', 'P_F_lag_sum', 'GPP_April']
-    target = 'GPP_DT_VUT_REF'
+    args = import_args()
+    run_name = args.run_name
     
-    run_name = sys.argv[1]
-    #run_name = 'RF_DT_targetscaled_mega1'
+    if args.include_gpp_feature.lower() == 'true':
+        features = ['SW_IN_F', 'TA_F', 'RH', 'WS_F', 'LAI', 'P_F_lag_sum', 'GPP_lag_mean'] #, 'GPP_April']
+    else:
+        features = ['SW_IN_F', 'TA_F', 'RH', 'WS_F', 'LAI', 'P_F_lag_sum']
 
-    train_path = 'output_findevents/v3/allsites_training_dd_clipped.csv'
-    event_path = 'output_findevents/v3/allsites_event_dd_clipped.csv'
+    target = args.target
+    
+
+    train_path = 'output_findevents/2025_remove_medium/allsites_training_dd_clipped.csv' # original submission: 'output_findevents/v3/allsites_training_dd_clipped.csv'
+    event_path = 'output_findevents/2025_remove_medium/allsites_event_dd_clipped.csv' # original submission: 'output_findevents/v3/allsites_event_dd_clipped.csv'
     train_all = pd.read_csv(train_path)
     event_all = pd.read_csv(event_path)
 
@@ -83,7 +88,13 @@ def main():
     scores.to_csv(f'{rf_runs_dir}/{run_name}/performance.csv')
 
 
-
+def import_args():
+    parser = argparse.ArgumentParser('Process half-hourly fluxnet data for extreme SWC')
+    parser.add_argument('-include_gpp_feature', type=str, default='True')
+    parser.add_argument('-target', type=str, default='GPP_DT_VUT_REF')
+    parser.add_argument('-run_name', type=str)
+    args = parser.parse_args()
+    return args
 
 def randomforest_all_sites(train_df, event_df, features, target, random_grid, inner_cv_splits, outer_cv_splits, test_split_frac = 0.25, search_iters = 25, random_state = 1):
     # Lists for storing results
