@@ -20,6 +20,15 @@ import time
 ########################################################################################################################
 t0 = time.time()
 
+# Get run name
+run_name = sys.argv[1]
+which_version = sys.argv[2]
+print(f"Saving to folder: {run_name}")
+print(f"Running version: {which_version}")
+if len(sys.argv) < 3:
+    print("Must supply two arguments: -run_name -which_version")
+
+
 def rf_explain_anom(features, name, search_iters):
     
     n_estimators = [5, 25, 50, 75, 100, 200]
@@ -35,10 +44,8 @@ def rf_explain_anom(features, name, search_iters):
                 'min_samples_leaf': min_samples_leaf,
                 'bootstrap': bootstrap}
 
-    events_iqr['mean_lai'] = events_iqr['mean_lai'].fillna(events_iqr['mean_lai'].mean())
 
     # Apply Minmax scaler to X and y
-    
     scaler_features = preprocessing.MinMaxScaler()
     scaler_target = preprocessing.MinMaxScaler()
 
@@ -150,13 +157,17 @@ all_all = all_site + all_storm
 ############################## pull in data #######################################################
 ########################################################################################################################
 
-events_iqr = pd.read_csv('events_iqr.csv')
+events_iqr = pd.read_csv(f'runs/RF/{run_name}/events_iqr.csv')
+
+# one site, IT-Ro1 does not have high quality LAI data,
+# all other sites have data
+events_iqr['mean_lai'] = events_iqr['mean_lai'].fillna(0.5) 
 
 ########################################################################################################################
 ############################## RUN IT FOR ALL FEATURES #######################################################
 ########################################################################################################################
 
-which_version = sys.argv[1]
+
 
 """
 if which_version == 'features':
@@ -215,8 +226,8 @@ if which_version == 'all':
         performances = pd.concat([performances, r2])
         combo_count += 1
         print(r2['r2'])
-        importances.to_csv('runs/rf_explain_anomaly/importances_all_smallersearch.csv')
-        performances.to_csv('runs/rf_explain_anomaly/performances_all_smallersearch.csv')
+        importances.to_csv(f'runs/RF/{run_name}/importances_all_smallersearch.csv')
+        performances.to_csv(f'runs/RF/{run_name}/performances_all_smallersearch.csv')
 
 elif which_version == 'site':
 
@@ -233,8 +244,8 @@ elif which_version == 'site':
         performances_site = pd.concat([performances_site, r2])
         combo_count += 1
         print(r2['r2'])
-        importances_site.to_csv('runs/rf_explain_anomaly/importances_site_smallersearch.csv')
-        performances_site.to_csv('runs/rf_explain_anomaly/performances_site_smallersearch.csv')
+        importances_site.to_csv(f'runs/RF/{run_name}/importances_site_smallersearch.csv')
+        performances_site.to_csv(f'runs/RF/{run_name}/performances_site_smallersearch.csv')
 
 
 elif which_version == 'storm':
@@ -251,8 +262,8 @@ elif which_version == 'storm':
         performances_storm = pd.concat([performances_storm, r2])
         combo_count += 1
         print(r2['r2'])
-        importances_storm.to_csv('runs/rf_explain_anomaly/importances_storm_smallersearch.csv')
-        performances_storm.to_csv('runs/rf_explain_anomaly/performances_storm_smallersearch.csv')
+        importances_storm.to_csv(f'runs/RF/{run_name}/importances_storm_smallersearch.csv')
+        performances_storm.to_csv(f'runs/RF/{run_name}/performances_storm_smallersearch.csv')
 
 t1 = time.time()
 print(f"Elapsed time: {t1-t0} secs")
