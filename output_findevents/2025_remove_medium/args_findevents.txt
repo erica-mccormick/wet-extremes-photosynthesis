@@ -1,0 +1,10 @@
+{
+  "percentile_thresh": 0.95,
+  "consec_timestep_thresh": 96,
+  "am": "6:00",
+  "pm": "18:00",
+  "p_thresh_hh": 0.1,
+  "p_pos_per_daytime_thresh": 1,
+  "qc_frac_allowed": 0.15,
+  "csv_output_dir": "output_findevents/2025_remove_medium"
+}

@@ -1,0 +1,5 @@
+{
+  "findevents_dir": "output_findevents/2025_remove_medium",
+  "event_filename": "allsites_event.csv",
+  "training_filename": "allsites_training.csv"
+}

@@ -1,0 +1,26 @@
+Site,Start,End,Notes
+CA-NS2,11-08-2004,02-07-2005,"Could extend to Nov 4, 2004 to May 19, 2005 if desired"
+CA-NS4,9-21-2005,10-11-2005,end of timeseries
+CA-SF2,6-20-2001,7-5-2002,
+CA-SF2,11-29-2001,4-17-2002,
+CA-SF2,10-2-2005,11-9-2005,end of timeseries
+CH-Lae,8-25-2004,9-15-2004,"beginning, might be okay"
+CH-Lae,9-19-2013,1-5-2014,probably okay to remove less
+DE-Lkb,12-13-2009,3-16-2010,
+DE-Lkb,6-30-2013,9-18-2013,cutting off a bit at the betgging that I'm uncertaina bout
+DE-Lnf,12-27-2006,1-15-2010,
+DK-Sor,8-18-2007,1-4-2014,
+IT-CA1,5-24-2011,7-2-2011,beginning of timeseries
+IT-CA1,12-7-2014,12-31-2014,end of timeseries
+IT-Col,1-10-2010,2-23-2010,few days of good data in there but followed by more bad data
+IT-Col,9-17-2012,10-16-2012,
+IT-Col,11-13-2012,1-20-2013,
+IT-Ro1,4-16-2000,5-2-2000,"beginning, might hae cut too much from this site in general"
+IT-Ro1,12-13-2005,4-18-2006,might have gone too hard with this sites cleaning
+IT-Ro1,7-1-2007,3-8-2008,might have gone too hard with this sites cleaning
+JP-SMF,9-13-2002,9-30-2002,
+JP-SMF,6-29-2004,9-27-2004,
+NL-Loo,8-29-2000,5-13-2002,
+RU-Fyo,12-31-2006,3-10-2009,
+US-Blo,6-12-1997,11-5-1999,beginning of timeseries
+US-Ton,4-22-2001,5-10-2001,beginning; might be okay to leave in but a few data points looked weird
