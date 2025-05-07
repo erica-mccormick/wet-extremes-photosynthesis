@@ -36,28 +36,9 @@ def main():
 
     #print('Event and test length start: ', event.shape[0], test.shape[0])
 
-
     # ------------- Merge with metadata -- this is done later -------------
     #metadata = pd.read_csv(args.metadata_path).drop_duplicates(subset='SITE_ID',keep='first')
     #event = event.merge(metadata, how='left', on = ['SITE_ID'])
-
-
-    # ------------- Do event bootstrapping on anomalies from testing distribution -------------
-    print('Bootstrapping events')
-    event_with_bootstrap = pd.DataFrame()
-    for site in event['SITE_ID'].unique():
-
-        # Separate dataframe by site
-        event_site = event[event['SITE_ID']==site]
-        test_site = test[test['SITE_ID']==site]
-
-        # Get bootstrapped event day anomalies and save to new dataframe
-        event_site['actual - predicted (bootstrapped)'] = debias_anomaly(site, test_site, event_site, num_iters = 1, bins = 15, anomaly_col = 'actual - predicted')
-        event_with_bootstrap = pd.concat([event_with_bootstrap, event_site])
-
-    # Save new anomaly column
-    event['actual - predicted (bootstrapped)'] = event_with_bootstrap['actual - predicted (bootstrapped)']
-
 
     # ------------- Add column of event anomaly percentileof test -------------
     event_new = pd.DataFrame()
@@ -69,7 +50,6 @@ def main():
         event_site = add_event_percentile_of_test(event_site, test_site)
         event_new = pd.concat([event_new, event_site])
     event = event_new
-
 
     # ------------- Make dataframe with 25th and 75th percentile of testing distribution per site -------------
     print('Making dataframe with test distribution uncertainty')
@@ -119,7 +99,6 @@ def main():
         event_data = max_value_to_date_during_storm(dd_fluxnet = dd_event, event_or_training_df = event_data, col_of_interest = 'p_percentile')
         event_data = max_value_to_date_during_storm(dd_fluxnet = dd_event, event_or_training_df = event_data, col_of_interest = 'temp_percentile')
         
-
         # Get the absolute magnitude of the min, max, and mean from the start of the storm to the anomaly day (inclusive)
         event_data = max_value_to_date_during_storm(dd_fluxnet = dd_event, event_or_training_df = event_data, col_of_interest = 'WS_F')
         event_data = max_value_to_date_during_storm(dd_fluxnet = dd_event, event_or_training_df = event_data, col_of_interest = 'SWC_F_MDS_1')
@@ -137,10 +116,8 @@ def main():
         seasonal_mean['SITE_ID'] = s
         all_seasonal = pd.concat([all_seasonal, seasonal_mean])
 
-
-
     # ------------- Save dataframes -------------
-        # Save a copy of all arguments
+    # Save a copy of all arguments
     print('Saving 3 dataframes')
     out_args = 'output_anomalies/' + args.out_name + '_args.txt'
     with open(out_args, 'w') as f:
@@ -152,13 +129,19 @@ def main():
     t1 = time.time()
     print(f"Elapsed time: {round((t1-t0)/60,2)} minutes")
 
+
+############################################################################
+# ----------------------------- BEGIN FUNCTIONS -----------------------------
+############################################################################
+
+
 def import_args():
     parser = argparse.ArgumentParser('Add columns to event and feature data that are not available from FLUXNET')
-    parser.add_argument('-best_event_path', type=str, default='output_nn/event_best_march14.csv', help='Output directory from multiple NN runs')
-    parser.add_argument('-best_test_path', type=str, default='output_nn/test_best_march14.csv', help='Output directory from multiple NN runs')
-    parser.add_argument('-output_findevents_dir', type=str, default='output_findevents/v2', help='Output directory from multiple NN runs')
-    parser.add_argument('-metadata_path', type=str, default='metadata.csv', help='Output directory from multiple NN runs')
-    parser.add_argument('-out_name', type=str, default='LE', help='Output directory from multiple NN runs')
+    parser.add_argument('-best_event_path', type=str)
+    parser.add_argument('-best_test_path', type=str)
+    parser.add_argument('-output_findevents_dir', type=str, help='The findevents directory')
+    parser.add_argument('-out_name', type=str, help='Output directory name')
+    parser.add_argument('-metadata_path', type=str, default='metadata_total.csv', help='Metadata for site information')
     args = parser.parse_args()
     return args
 
@@ -170,77 +153,6 @@ def add_event_percentile_of_test(event_site_df, test_site_df):
         ps.append(percentileofscore(a = test_site_df['actual - predicted'].values, score = row['actual - predicted']))
     event_site_df['event_percentileof_test'] = ps
     return event_site_df
-
-
-
-
-# ----------------------------- Bootstrapping to debias anomaly -----------------------------
-
-
-def draw_test_sample(test_site_df, num_vals_to_generate, bins = 15, anomaly_col = 'actual - predicted'):
-    """
-    Return values drawn from a distribution built from the test anomaly for a single site.
-
-    Args:
-        test_site_df (df): dataframe of testing data for a single site
-        num_vals_to_generate (int): how many datapoints to return
-        bins (int, optional): the bins size when creating histogram from data
-        bandwidth (float, optional): bw_method for scipy.stats.gaussian_kde
-        anomaly_col (str, optional): the name of the anomaly column to be used as data from test_site_df
-    Returns:
-        np.array: Random sample from test of size num_vals_to_generate
-
-    """
-
-    # Code modified from: https://stackoverflow.com/questions/17821458/random-number-from-histogram
-
-    data = np.array(test_site_df[anomaly_col])
-    hist, bins = np.histogram(data, bins)
-    x_grid = np.linspace(min(data), max(data), num_vals_to_generate)
-
-    # Get gaussian kde pdf
-    kde = gaussian_kde(data, bw_method = 'scott') # this is default bw_method
-    kdepdf = kde.evaluate(x_grid)
-
-    # Randomly draw from cdf
-    cdf = np.cumsum(kdepdf)
-    cdf = cdf / cdf[-1]
-    values = np.random.rand(num_vals_to_generate)
-    value_bins = np.searchsorted(cdf, values)
-    rand_draw_from_cdf = x_grid[value_bins]
-
-    return rand_draw_from_cdf
-
-def debias_anomaly(site, test_site_df, event_site_df, num_iters, bins = 15, anomaly_col = 'actual - predicted', make_plots = True):
-    num_events = event_site_df.shape[0]
-    anomaly_corrected = list(np.zeros(num_events))
-    anomaly_event = np.array(event_site_df[anomaly_col])
-
-    if make_plots:
-        plt.figure(dpi=200, figsize = (7,2))
-        plt.plot(event_site_df['actual - predicted'],[0]*len(event_site_df['actual - predicted']), '*', label = 'original', alpha = 0.75)
-    
-    for i in range(num_iters):
-        noise = draw_test_sample(test_site_df, num_events, bins, anomaly_col)
-        event_minus_noise = anomaly_event - noise
-        anomaly_corrected = anomaly_corrected + event_minus_noise
-
-        if make_plots:
-            plt.plot(event_minus_noise,[i+1]*len(event_minus_noise), 'o', alpha = 0.4)
-
-    anomaly_corrected = anomaly_corrected / num_iters
-
-    if make_plots:
-        plt.plot(anomaly_corrected,[i+2]*len(anomaly_corrected), '^',  alpha = 0.4)
-        plt.ylabel('Iteration')
-        plt.xlabel('actual - predicted after subtraction')
-        plt.axvline(-0.00005, 0.005, color = 'black')
-        plt.title(f'{num_iters} iters with {bins} bins at {site}')
-        if not os.path.exists('figs/anomaly_avg_iteration'): os.makedirs('figs/anomaly_avg_iteration')
-        plt.savefig(os.path.join('figs','anomaly_avg_iteration', site + '.png'))
-        plt.close()
-
-    return anomaly_corrected
 
 
 # ----------------------------- Functions associated with storms -----------------------------
